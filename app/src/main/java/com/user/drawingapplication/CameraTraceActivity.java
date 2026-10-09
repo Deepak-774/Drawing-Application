@@ -19,6 +19,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
@@ -29,6 +30,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -45,10 +47,12 @@ public class CameraTraceActivity extends AppCompatActivity {
     private PreviewView previewView;
     private ImageView ghostImage;
     private ImageCapture imageCapture;
+    private Camera camera;
     private Bitmap referenceBitmap;
     private float lastTouchX;
     private float lastTouchY;
     private boolean isScaling;
+    private boolean torchOn;
 
     private final ActivityResultLauncher<String> permissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -92,12 +96,35 @@ public class CameraTraceActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        hideSystemUi();
+    }
+
+    private void hideSystemUi() {
+        WindowInsetsControllerCompat controller =
+                ViewCompat.getWindowInsetsController(getWindow().getDecorView());
+        if (controller != null) {
+            controller.hide(WindowInsetsCompat.Type.systemBars());
+            controller.setSystemBarsBehavior(
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        }
+    }
+
     private void applyInsets() {
         float density = getResources().getDisplayMetrics().density;
         int pad12 = (int) (12 * density);
 
         TextView hint = findViewById(R.id.traceHint);
         ViewCompat.setOnApplyWindowInsetsListener(hint, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
+
+        TextView btnTorch = findViewById(R.id.btnTorch);
+        ViewCompat.setOnApplyWindowInsetsListener(btnTorch, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
             return insets;
@@ -122,7 +149,7 @@ public class CameraTraceActivity extends AppCompatActivity {
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                         .build();
                 provider.unbindAll();
-                provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture);
+                camera = provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture);
             } catch (ExecutionException | InterruptedException e) {
                 Toast.makeText(this, "Unable to start camera", Toast.LENGTH_SHORT).show();
             }
@@ -151,6 +178,16 @@ public class CameraTraceActivity extends AppCompatActivity {
 
         findViewById(R.id.changeImageBtn).setOnClickListener(v -> imagePicker.launch("image/*"));
         findViewById(R.id.btnDone).setOnClickListener(v -> saveDrawing());
+
+        TextView btnTorch = findViewById(R.id.btnTorch);
+        btnTorch.setOnClickListener(v -> {
+            if (camera == null) {
+                return;
+            }
+            torchOn = !torchOn;
+            camera.getCameraControl().enableTorch(torchOn);
+            btnTorch.setAlpha(torchOn ? 1f : 0.7f);
+        });
     }
 
     private void loadGhostImage(Uri uri) {
