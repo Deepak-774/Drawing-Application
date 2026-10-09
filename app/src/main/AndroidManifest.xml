@@ -21,6 +21,9 @@
             android:name=".CameraTraceActivity"
             android:exported="false" />
         <activity
+            android:name=".GalleryActivity"
+            android:exported="false" />
+        <activity
             android:name=".MenuScreen"
             android:exported="false" />
         <activity

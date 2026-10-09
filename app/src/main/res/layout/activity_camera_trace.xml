@@ -37,48 +37,74 @@
         android:textSize="12sp" />
 
     <LinearLayout
-        android:id="@+id/controlBar"
+        android:id="@+id/bottomPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
-        android:background="@drawable/menu_item_bg"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="14dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Opacity"
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnDone"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/btn_done_bg"
+            android:text="📸 Save to Gallery"
             android:textColor="#FFFFFF"
-            android:textSize="13sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-        <SeekBar
-            android:id="@+id/opacitySeekBar"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/controlBar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:max="100"
-            android:progress="30"
-            android:progressTint="#892CDC"
-            android:thumbTint="#BC6FF1" />
+            android:layout_marginTop="10dp"
+            android:background="@drawable/menu_item_bg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="14dp">
 
-        <TextView
-            android:id="@+id/changeImageBtn"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/menu_icon_bg"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="🖼️"
-            android:textSize="20sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Opacity"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp" />
+
+            <SeekBar
+                android:id="@+id/opacitySeekBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="30"
+                android:progressTint="#892CDC"
+                android:thumbTint="#BC6FF1" />
+
+            <TextView
+                android:id="@+id/changeImageBtn"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/menu_icon_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="🖼️"
+                android:textSize="20sp" />
+
+        </LinearLayout>
 
     </LinearLayout>
+
+    <View
+        android:id="@+id/shutterFlash"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="#FFFFFF" />
 
 </FrameLayout>

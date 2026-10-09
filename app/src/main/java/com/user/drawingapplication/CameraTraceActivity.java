@@ -1,6 +1,7 @@
 package com.user.drawingapplication;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -18,6 +20,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -28,6 +32,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
@@ -38,6 +44,8 @@ public class CameraTraceActivity extends AppCompatActivity {
 
     private PreviewView previewView;
     private ImageView ghostImage;
+    private ImageCapture imageCapture;
+    private Bitmap referenceBitmap;
     private float lastTouchX;
     private float lastTouchY;
     private boolean isScaling;
@@ -87,7 +95,6 @@ public class CameraTraceActivity extends AppCompatActivity {
     private void applyInsets() {
         float density = getResources().getDisplayMetrics().density;
         int pad12 = (int) (12 * density);
-        int pad14 = (int) (14 * density);
 
         TextView hint = findViewById(R.id.traceHint);
         ViewCompat.setOnApplyWindowInsetsListener(hint, (v, insets) -> {
@@ -96,10 +103,10 @@ public class CameraTraceActivity extends AppCompatActivity {
             return insets;
         });
 
-        android.view.View controlBar = findViewById(R.id.controlBar);
-        ViewCompat.setOnApplyWindowInsetsListener(controlBar, (v, insets) -> {
+        android.view.View bottomPanel = findViewById(R.id.bottomPanel);
+        ViewCompat.setOnApplyWindowInsetsListener(bottomPanel, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), pad14 + bars.bottom);
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), bars.bottom);
             return insets;
         });
     }
@@ -111,8 +118,11 @@ public class CameraTraceActivity extends AppCompatActivity {
                 ProcessCameraProvider provider = future.get();
                 Preview preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
+                imageCapture = new ImageCapture.Builder()
+                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                        .build();
                 provider.unbindAll();
-                provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview);
+                provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture);
             } catch (ExecutionException | InterruptedException e) {
                 Toast.makeText(this, "Unable to start camera", Toast.LENGTH_SHORT).show();
             }
@@ -140,11 +150,13 @@ public class CameraTraceActivity extends AppCompatActivity {
         });
 
         findViewById(R.id.changeImageBtn).setOnClickListener(v -> imagePicker.launch("image/*"));
+        findViewById(R.id.btnDone).setOnClickListener(v -> saveDrawing());
     }
 
     private void loadGhostImage(Uri uri) {
         Bitmap bitmap = decodeScaledBitmap(uri);
         if (bitmap != null) {
+            referenceBitmap = bitmap;
             ghostImage.setImageBitmap(bitmap);
             ghostImage.setScaleX(1f);
             ghostImage.setScaleY(1f);
@@ -176,6 +188,66 @@ public class CameraTraceActivity extends AppCompatActivity {
             }
         } catch (IOException e) {
             return null;
+        }
+    }
+
+    private void saveDrawing() {
+        if (referenceBitmap == null) {
+            Toast.makeText(this, "Select a reference image first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (imageCapture == null) {
+            Toast.makeText(this, "Camera is not ready yet", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File pairDir = new File(getFilesDir(), "drawings" + File.separator + System.currentTimeMillis());
+        if (!pairDir.isDirectory() && !pairDir.mkdirs()) {
+            Toast.makeText(this, "Could not save drawing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!saveBitmap(referenceBitmap, new File(pairDir, "reference.jpg"))) {
+            Toast.makeText(this, "Could not save reference image", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (previewView.getDisplay() != null) {
+            imageCapture.setTargetRotation(previewView.getDisplay().getRotation());
+        }
+
+        View flash = findViewById(R.id.shutterFlash);
+        ghostImage.setVisibility(View.INVISIBLE);
+        flash.animate().alpha(0.9f).setDuration(120)
+                .withEndAction(() -> flash.animate().alpha(0f).setDuration(250).start())
+                .start();
+
+        ImageCapture.OutputFileOptions options = new ImageCapture.OutputFileOptions
+                .Builder(new File(pairDir, "result.jpg"))
+                .build();
+
+        imageCapture.takePicture(options, ContextCompat.getMainExecutor(this),
+                new ImageCapture.OnImageSavedCallback() {
+                    @Override
+                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                        Toast.makeText(CameraTraceActivity.this, "Saved to Gallery", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(CameraTraceActivity.this, GalleryActivity.class));
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(@NonNull ImageCaptureException exception) {
+                        ghostImage.setVisibility(View.VISIBLE);
+                        Toast.makeText(CameraTraceActivity.this, "Capture failed", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private boolean saveBitmap(Bitmap bitmap, File file) {
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            return bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+        } catch (IOException e) {
+            return false;
         }
     }
 

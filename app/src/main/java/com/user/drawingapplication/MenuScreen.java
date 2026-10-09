@@ -34,6 +34,8 @@ public class MenuScreen extends AppCompatActivity {
         });
 
         findViewById(R.id.menuTraceCard).setOnClickListener(v -> imagePicker.launch("image/*"));
+        findViewById(R.id.menuGalleryCard).setOnClickListener(v ->
+                startActivity(new Intent(this, GalleryActivity.class)));
     }
 
     private void openCameraTrace(Uri imageUri) {
