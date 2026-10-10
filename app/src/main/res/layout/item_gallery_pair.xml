@@ -99,18 +99,17 @@
             android:padding="5dp"
             android:src="@drawable/ic_share" />
 
-        <TextView
+        <ImageView
             android:id="@+id/btnRemovePair"
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:layout_marginStart="6dp"
             android:background="@drawable/card_btn_bg"
             android:clickable="true"
+            android:contentDescription="Delete drawing"
             android:focusable="true"
-            android:gravity="center"
-            android:text="✕"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
+            android:padding="5dp"
+            android:src="@drawable/ic_close" />
 
     </LinearLayout>
 

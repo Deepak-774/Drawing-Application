@@ -49,6 +49,9 @@ public class CameraTraceActivity extends AppCompatActivity {
     private ImageCapture imageCapture;
     private Camera camera;
     private Bitmap referenceBitmap;
+    private Bitmap lineArtBitmap;
+    private boolean lineArtOn;
+    private ImageView btnLineArt;
     private float lastTouchX;
     private float lastTouchY;
     private boolean isScaling;
@@ -84,7 +87,13 @@ public class CameraTraceActivity extends AppCompatActivity {
         setupControls();
 
         Uri imageUri = getIntent().getData();
-        if (imageUri != null) {
+        int sampleResId = getIntent().getIntExtra("sampleResId", 0);
+        if (sampleResId != 0) {
+            Bitmap sample = decodeScaledSample(sampleResId);
+            if (sample != null) {
+                setReferenceBitmap(sample);
+            }
+        } else if (imageUri != null) {
             loadGhostImage(imageUri);
         }
 
@@ -123,8 +132,15 @@ public class CameraTraceActivity extends AppCompatActivity {
             return insets;
         });
 
-        TextView btnTorch = findViewById(R.id.btnTorch);
+        ImageView btnTorch = findViewById(R.id.btnTorch);
         ViewCompat.setOnApplyWindowInsetsListener(btnTorch, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
+
+        ImageView btnLineArt = findViewById(R.id.btnLineArt);
+        ViewCompat.setOnApplyWindowInsetsListener(btnLineArt, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
             return insets;
@@ -179,7 +195,7 @@ public class CameraTraceActivity extends AppCompatActivity {
         findViewById(R.id.changeImageBtn).setOnClickListener(v -> imagePicker.launch("image/*"));
         findViewById(R.id.btnDone).setOnClickListener(v -> saveDrawing());
 
-        TextView btnTorch = findViewById(R.id.btnTorch);
+        ImageView btnTorch = findViewById(R.id.btnTorch);
         btnTorch.setOnClickListener(v -> {
             if (camera == null) {
                 return;
@@ -187,21 +203,124 @@ public class CameraTraceActivity extends AppCompatActivity {
             torchOn = !torchOn;
             camera.getCameraControl().enableTorch(torchOn);
             btnTorch.setAlpha(torchOn ? 1f : 0.7f);
+            btnTorch.setImageResource(torchOn ? R.drawable.ic_flashlight_on : R.drawable.ic_flashlight_off);
         });
+
+        btnLineArt = findViewById(R.id.btnLineArt);
+        btnLineArt.setOnClickListener(v -> toggleLineArt());
+    }
+
+    private void toggleLineArt() {
+        if (referenceBitmap == null) {
+            Toast.makeText(this, "Select a reference image first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        lineArtOn = !lineArtOn;
+        updateLineArtButton();
+        if (lineArtOn) {
+            if (lineArtBitmap != null) {
+                ghostImage.setImageBitmap(lineArtBitmap);
+            } else {
+                computeLineArt();
+            }
+        } else {
+            ghostImage.setImageBitmap(referenceBitmap);
+        }
+    }
+
+    private void computeLineArt() {
+        Bitmap source = referenceBitmap;
+        new Thread(() -> {
+            Bitmap lineArt = toLineArt(source);
+            runOnUiThread(() -> {
+                lineArtBitmap = lineArt;
+                if (lineArtOn) {
+                    ghostImage.setImageBitmap(lineArtBitmap);
+                }
+            });
+        }).start();
+    }
+
+    private void updateLineArtButton() {
+        if (lineArtOn) {
+            btnLineArt.setBackgroundResource(R.drawable.btn_done_bg);
+            btnLineArt.setAlpha(1f);
+        } else {
+            btnLineArt.setBackgroundResource(R.drawable.card_btn_bg);
+            btnLineArt.setAlpha(0.7f);
+        }
+    }
+
+    private Bitmap toLineArt(Bitmap source) {
+        int width = source.getWidth();
+        int height = source.getHeight();
+        int[] pixels = new int[width * height];
+        source.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        float[] gray = new float[width * height];
+        for (int i = 0; i < pixels.length; i++) {
+            int p = pixels[i];
+            gray[i] = 0.299f * ((p >> 16) & 0xFF)
+                    + 0.587f * ((p >> 8) & 0xFF)
+                    + 0.114f * (p & 0xFF);
+        }
+
+        int[] out = new int[width * height];
+        int threshold = 80;
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
+                int i = y * width + x;
+                float gx = -gray[i - width - 1] - 2 * gray[i - 1] - gray[i + width - 1]
+                        + gray[i - width + 1] + 2 * gray[i + 1] + gray[i + width + 1];
+                float gy = -gray[i - width - 1] - 2 * gray[i - width] - gray[i - width + 1]
+                        + gray[i + width - 1] + 2 * gray[i + width] + gray[i + width + 1];
+                float magnitude = (float) Math.sqrt(gx * gx + gy * gy);
+                out[i] = magnitude > threshold ? 0xFF000000 : 0x00000000;
+            }
+        }
+
+        Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        result.setPixels(out, 0, width, 0, 0, width, height);
+        return result;
+    }
+
+    private Bitmap decodeScaledSample(int resId) {
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(getResources(), resId, bounds);
+
+        int sampleSize = 1;
+        while (bounds.outWidth / (sampleSize * 2) >= 1024
+                && bounds.outHeight / (sampleSize * 2) >= 1024) {
+            sampleSize *= 2;
+        }
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = sampleSize;
+        return BitmapFactory.decodeResource(getResources(), resId, options);
     }
 
     private void loadGhostImage(Uri uri) {
         Bitmap bitmap = decodeScaledBitmap(uri);
         if (bitmap != null) {
-            referenceBitmap = bitmap;
-            ghostImage.setImageBitmap(bitmap);
-            ghostImage.setScaleX(1f);
-            ghostImage.setScaleY(1f);
-            ghostImage.setTranslationX(0f);
-            ghostImage.setTranslationY(0f);
+            setReferenceBitmap(bitmap);
         } else {
             Toast.makeText(this, "Could not load image", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void setReferenceBitmap(Bitmap bitmap) {
+        referenceBitmap = bitmap;
+        lineArtBitmap = null;
+        if (lineArtOn) {
+            computeLineArt();
+        } else {
+            ghostImage.setImageBitmap(bitmap);
+        }
+        ghostImage.setScaleX(1f);
+        ghostImage.setScaleY(1f);
+        ghostImage.setTranslationX(0f);
+        ghostImage.setTranslationY(0f);
     }
 
     private Bitmap decodeScaledBitmap(Uri uri) {

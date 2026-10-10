@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
@@ -36,7 +37,21 @@
         android:textColor="#FFFFFF"
         android:textSize="12sp" />
 
-    <TextView
+    <ImageView
+        android:id="@+id/btnLineArt"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="16dp"
+        android:alpha="0.7"
+        android:background="@drawable/card_btn_bg"
+        android:clickable="true"
+        android:contentDescription="Line art mode"
+        android:focusable="true"
+        android:padding="10dp"
+        android:src="@drawable/ic_auto_fix_high" />
+
+    <ImageView
         android:id="@+id/btnTorch"
         android:layout_width="44dp"
         android:layout_height="44dp"
@@ -45,10 +60,10 @@
         android:alpha="0.7"
         android:background="@drawable/card_btn_bg"
         android:clickable="true"
+        android:contentDescription="Flashlight"
         android:focusable="true"
-        android:gravity="center"
-        android:text="🔦"
-        android:textSize="20sp" />
+        android:padding="10dp"
+        android:src="@drawable/ic_flashlight_off" />
 
     <LinearLayout
         android:id="@+id/bottomPanel"
@@ -65,10 +80,12 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="@drawable/btn_done_bg"
-            android:text="📸 Save to Gallery"
+            android:text="Save to Gallery"
             android:textColor="#FFFFFF"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:drawableStartCompat="@drawable/ic_save"
+            app:drawableTint="#FFFFFF" />
 
         <LinearLayout
             android:id="@+id/controlBar"
@@ -99,16 +116,17 @@
                 android:progressTint="#892CDC"
                 android:thumbTint="#BC6FF1" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/changeImageBtn"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:background="@drawable/menu_icon_bg"
                 android:clickable="true"
+                android:contentDescription="Change reference image"
                 android:focusable="true"
-                android:gravity="center"
-                android:text="🖼️"
-                android:textSize="20sp" />
+                android:padding="10dp"
+                android:src="@drawable/ic_image"
+                android:tint="#FFFFFF" />
 
         </LinearLayout>
 

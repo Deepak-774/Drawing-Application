@@ -24,6 +24,12 @@
             android:name=".GalleryActivity"
             android:exported="false" />
         <activity
+            android:name=".GuideActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SampleImagesActivity"
+            android:exported="false" />
+        <activity
             android:name=".MenuScreen"
             android:exported="false" />
         <activity
