@@ -55,6 +55,7 @@ public class CameraTraceActivity extends AppCompatActivity {
     private float lastTouchX;
     private float lastTouchY;
     private boolean isScaling;
+    private boolean dragReset;
     private boolean torchOn;
 
     private final ActivityResultLauncher<String> permissionLauncher =
@@ -146,6 +147,13 @@ public class CameraTraceActivity extends AppCompatActivity {
             return insets;
         });
 
+        ImageView btnBack = findViewById(R.id.btnBack);
+        ViewCompat.setOnApplyWindowInsetsListener(btnBack, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
+
         android.view.View bottomPanel = findViewById(R.id.bottomPanel);
         ViewCompat.setOnApplyWindowInsetsListener(bottomPanel, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -194,6 +202,7 @@ public class CameraTraceActivity extends AppCompatActivity {
 
         findViewById(R.id.changeImageBtn).setOnClickListener(v -> imagePicker.launch("image/*"));
         findViewById(R.id.btnDone).setOnClickListener(v -> saveDrawing());
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         ImageView btnTorch = findViewById(R.id.btnTorch);
         btnTorch.setOnClickListener(v -> {
@@ -413,8 +422,29 @@ public class CameraTraceActivity extends AppCompatActivity {
                     @Override
                     public boolean onScale(@NonNull ScaleGestureDetector detector) {
                         float factor = detector.getScaleFactor();
-                        ghostImage.setScaleX(ghostImage.getScaleX() * factor);
-                        ghostImage.setScaleY(ghostImage.getScaleY() * factor);
+                        if (factor <= 0f || Float.isNaN(factor) || Float.isInfinite(factor)) {
+                            return false;
+                        }
+
+                        float scaleX = ghostImage.getScaleX();
+                        float scaleY = ghostImage.getScaleY();
+                        float targetX = clampScale(scaleX * factor);
+                        float targetY = clampScale(scaleY * factor);
+
+                        float ratioX = targetX / scaleX;
+                        float ratioY = targetY / scaleY;
+
+                        float tx = ghostImage.getTranslationX();
+                        float ty = ghostImage.getTranslationY();
+                        tx -= scaleX * (ratioX - 1f)
+                                * (detector.getFocusX() - ghostImage.getWidth() / 2f);
+                        ty -= scaleY * (ratioY - 1f)
+                                * (detector.getFocusY() - ghostImage.getHeight() / 2f);
+
+                        ghostImage.setScaleX(targetX);
+                        ghostImage.setScaleY(targetY);
+                        ghostImage.setTranslationX(tx);
+                        ghostImage.setTranslationY(ty);
                         return true;
                     }
 
@@ -427,6 +457,7 @@ public class CameraTraceActivity extends AppCompatActivity {
                     @Override
                     public void onScaleEnd(@NonNull ScaleGestureDetector detector) {
                         isScaling = false;
+                        dragReset = true;
                     }
                 });
 
@@ -436,19 +467,35 @@ public class CameraTraceActivity extends AppCompatActivity {
                 case MotionEvent.ACTION_DOWN:
                     lastTouchX = event.getRawX();
                     lastTouchY = event.getRawY();
+                    dragReset = false;
+                    break;
+                case MotionEvent.ACTION_POINTER_UP:
+                    dragReset = true;
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    if (!isScaling && event.getPointerCount() == 1) {
-                        float dx = event.getRawX() - lastTouchX;
-                        float dy = event.getRawY() - lastTouchY;
-                        ghostImage.setTranslationX(ghostImage.getTranslationX() + dx);
-                        ghostImage.setTranslationY(ghostImage.getTranslationY() + dy);
+                    if (event.getPointerCount() > 1 || isScaling) {
+                        dragReset = true;
+                    } else {
+                        if (!dragReset) {
+                            float dx = event.getRawX() - lastTouchX;
+                            float dy = event.getRawY() - lastTouchY;
+                            ghostImage.setTranslationX(ghostImage.getTranslationX() + dx);
+                            ghostImage.setTranslationY(ghostImage.getTranslationY() + dy);
+                        }
+                        dragReset = false;
                         lastTouchX = event.getRawX();
                         lastTouchY = event.getRawY();
                     }
                     break;
+                case MotionEvent.ACTION_CANCEL:
+                    dragReset = true;
+                    break;
             }
             return true;
         });
+    }
+
+    private float clampScale(float value) {
+        return Math.max(0.3f, Math.min(value, 6f));
     }
 }

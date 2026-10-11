@@ -41,6 +41,64 @@
             android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/menuSamplesCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/menu_item_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="14dp">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/menu_icon_bg"
+            android:contentDescription="Sample images"
+            android:padding="12dp"
+            android:src="@drawable/ic_sample_images"
+            android:tint="#FFFFFF" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sample Images"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Trace a built-in design"
+                android:textSize="13sp"
+                android:textColor="#9E9E9E" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="›"
+            android:textSize="26sp"
+            android:textColor="#892CDC" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/menuTraceCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -142,64 +200,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Browse your saved artwork"
-                android:textSize="13sp"
-                android:textColor="#9E9E9E" />
-
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="›"
-            android:textSize="26sp"
-            android:textColor="#892CDC" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/menuSamplesCard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/menu_item_bg"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="14dp">
-
-        <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/menu_icon_bg"
-            android:contentDescription="Sample images"
-            android:padding="12dp"
-            android:src="@drawable/ic_sample_images"
-            android:tint="#FFFFFF" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="14dp"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sample Images"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Trace a built-in design"
                 android:textSize="13sp"
                 android:textColor="#9E9E9E" />
 

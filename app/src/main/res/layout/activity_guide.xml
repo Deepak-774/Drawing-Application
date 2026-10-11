@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginBottom="16dp"
-        android:text="Everything you can do in Sketch"
+        android:text="Tap a section to learn more"
         android:textColor="#BC6FF1"
         android:textSize="14sp" />
 
