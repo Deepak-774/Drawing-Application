@@ -22,6 +22,7 @@ public class GuideActivity extends AppCompatActivity {
     private static final int[] SECTION_ICONS = {
             R.drawable.ic_image,
             R.drawable.ic_flashlight_on,
+            R.drawable.ic_align,
             R.drawable.ic_save,
             R.drawable.ic_photo_library,
             R.drawable.ic_lightbulb
@@ -30,6 +31,7 @@ public class GuideActivity extends AppCompatActivity {
     private static final String[] SECTION_TITLES = {
             "Tracing an image",
             "Camera controls",
+            "Align to paper",
             "Saving your work",
             "My Gallery",
             "Tips"
@@ -48,6 +50,14 @@ public class GuideActivity extends AppCompatActivity {
                     + "Bottom bar — change image, opacity slider, line art toggle "
                     + "(turns the photo into simple black outlines), and the purple "
                     + "save button.",
+
+            "Tap the frame button (top-left) and drag the four purple corners onto "
+                    + "the edges of your paper.\n\n"
+                    + "The reference image warps to match your sheet's exact angle, "
+                    + "so what you see lines up with the real paper.\n\n"
+                    + "Tap the button again to turn it off — the image snaps into the "
+                    + "aligned position.\n\n"
+                    + "Works best when the phone is held still or resting on a stand.",
 
             "Tap the purple save button in the bottom bar — the screen flashes like "
                     + "a camera, the ghost hides for a clean capture, and your drawing "

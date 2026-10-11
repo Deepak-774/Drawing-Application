@@ -62,6 +62,9 @@ public class CameraTraceActivity extends AppCompatActivity {
     private LinearLayout topBar;
     private LinearLayout bottomPanel;
     private TextView traceHint;
+    private AlignOverlayView alignOverlay;
+    private ImageView btnAlign;
+    private boolean alignOn;
 
     private final ActivityResultLauncher<String> permissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -176,6 +179,8 @@ public class CameraTraceActivity extends AppCompatActivity {
 
     private void setupControls() {
         ghostImage.setAlpha(DEFAULT_OPACITY);
+        alignOverlay = findViewById(R.id.alignOverlay);
+        alignOverlay.setGhostAlpha(DEFAULT_OPACITY);
 
         SeekBar opacitySeekBar = findViewById(R.id.opacitySeekBar);
         opacitySeekBar.setProgress((int) (DEFAULT_OPACITY * 100));
@@ -183,6 +188,7 @@ public class CameraTraceActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 ghostImage.setAlpha(progress / 100f);
+                alignOverlay.setGhostAlpha(progress / 100f);
             }
 
             @Override
@@ -211,6 +217,70 @@ public class CameraTraceActivity extends AppCompatActivity {
 
         btnLineArt = findViewById(R.id.btnLineArt);
         btnLineArt.setOnClickListener(v -> toggleLineArt());
+
+        btnAlign = findViewById(R.id.btnAlign);
+        btnAlign.setOnClickListener(v -> toggleAlign());
+    }
+
+    private void toggleAlign() {
+        if (referenceBitmap == null) {
+            Toast.makeText(this, "Select a reference image first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        alignOn = !alignOn;
+        if (alignOn) {
+            ghostImage.setVisibility(View.INVISIBLE);
+            alignOverlay.setGhostAlpha(ghostImage.getAlpha());
+            alignOverlay.setSource(currentGhostSource());
+            alignOverlay.setActive(true);
+            btnAlign.setBackgroundResource(R.drawable.btn_done_bg);
+            btnAlign.setAlpha(1f);
+            Toast.makeText(this, "Drag the corners onto your paper",
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            applyQuadToGhost();
+            alignOverlay.setActive(false);
+            ghostImage.setVisibility(View.VISIBLE);
+            btnAlign.setBackgroundResource(R.drawable.card_btn_bg);
+            btnAlign.setAlpha(0.7f);
+        }
+    }
+
+    private Bitmap currentGhostSource() {
+        return lineArtOn && lineArtBitmap != null ? lineArtBitmap : referenceBitmap;
+    }
+
+    private void refreshGhostSource() {
+        if (alignOn && alignOverlay != null) {
+            alignOverlay.setSource(currentGhostSource());
+        }
+    }
+
+    private void applyQuadToGhost() {
+        float[] p = alignOverlay.getPoints();
+        if (referenceBitmap == null || ghostImage.getWidth() == 0) {
+            return;
+        }
+
+        float cx = (p[0] + p[2] + p[4] + p[6]) / 4f;
+        float cy = (p[1] + p[3] + p[5] + p[7]) / 4f;
+        float topLen = (float) Math.hypot(p[2] - p[0], p[3] - p[1]);
+        float leftLen = (float) Math.hypot(p[6] - p[0], p[7] - p[1]);
+        float angle = (float) Math.toDegrees(Math.atan2(p[3] - p[1], p[2] - p[0]));
+
+        float vw = ghostImage.getWidth();
+        float vh = ghostImage.getHeight();
+        float bw = referenceBitmap.getWidth();
+        float bh = referenceBitmap.getHeight();
+        float fit = Math.min(vw / bw, vh / bh);
+        float contentW = bw * fit;
+        float contentH = bh * fit;
+
+        ghostImage.setRotation(angle);
+        ghostImage.setScaleX(topLen / contentW);
+        ghostImage.setScaleY(leftLen / contentH);
+        ghostImage.setTranslationX(cx - (ghostImage.getLeft() + vw / 2f));
+        ghostImage.setTranslationY(cy - (ghostImage.getTop() + vh / 2f));
     }
 
     private void toggleLineArt() {
@@ -229,6 +299,7 @@ public class CameraTraceActivity extends AppCompatActivity {
         } else {
             ghostImage.setImageBitmap(referenceBitmap);
         }
+        refreshGhostSource();
     }
 
     private void computeLineArt() {
@@ -240,6 +311,7 @@ public class CameraTraceActivity extends AppCompatActivity {
                 if (lineArtOn) {
                     ghostImage.setImageBitmap(lineArtBitmap);
                 }
+                refreshGhostSource();
             });
         }).start();
     }
@@ -324,6 +396,7 @@ public class CameraTraceActivity extends AppCompatActivity {
         ghostImage.setScaleY(1f);
         ghostImage.setTranslationX(0f);
         ghostImage.setTranslationY(0f);
+        refreshGhostSource();
     }
 
     private Bitmap decodeScaledBitmap(Uri uri) {
@@ -376,7 +449,11 @@ public class CameraTraceActivity extends AppCompatActivity {
         }
 
         View flash = findViewById(R.id.shutterFlash);
+        boolean alignWasVisible = alignOn;
         ghostImage.setVisibility(View.INVISIBLE);
+        if (alignWasVisible) {
+            alignOverlay.setVisibility(View.INVISIBLE);
+        }
         flash.animate().alpha(0.9f).setDuration(120)
                 .withEndAction(() -> flash.animate().alpha(0f).setDuration(250).start())
                 .start();
@@ -397,6 +474,9 @@ public class CameraTraceActivity extends AppCompatActivity {
                     @Override
                     public void onError(@NonNull ImageCaptureException exception) {
                         ghostImage.setVisibility(View.VISIBLE);
+                        if (alignWasVisible) {
+                            alignOverlay.setVisibility(View.VISIBLE);
+                        }
                         Toast.makeText(CameraTraceActivity.this, "Capture failed", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -463,6 +543,7 @@ public class CameraTraceActivity extends AppCompatActivity {
                         ghostImage.setTranslationY(0f);
                         ghostImage.setScaleX(1f);
                         ghostImage.setScaleY(1f);
+                        ghostImage.setRotation(0f);
                         Toast.makeText(CameraTraceActivity.this, "Ghost reset to center",
                                 Toast.LENGTH_SHORT).show();
                         return true;

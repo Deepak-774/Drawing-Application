@@ -21,7 +21,13 @@
         android:alpha="0.3"
         android:contentDescription="Tracing reference"
         android:scaleType="fitCenter"
-        tools:src="@drawable/logo" />
+        tools:src="@drawable/sample_1" />
+
+    <com.user.drawingapplication.AlignOverlayView
+        android:id="@+id/alignOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/traceHint"
@@ -58,6 +64,19 @@
             android:focusable="true"
             android:padding="10dp"
             android:src="@drawable/ic_arrow_back" />
+
+        <ImageView
+            android:id="@+id/btnAlign"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="10dp"
+            android:alpha="0.7"
+            android:background="@drawable/card_btn_bg"
+            android:clickable="true"
+            android:contentDescription="Align to paper"
+            android:focusable="true"
+            android:padding="10dp"
+            android:src="@drawable/ic_align" />
 
         <Space
             android:layout_width="0dp"
