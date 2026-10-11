@@ -7,10 +7,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,6 +59,9 @@ public class CameraTraceActivity extends AppCompatActivity {
     private boolean isScaling;
     private boolean dragReset;
     private boolean torchOn;
+    private LinearLayout topBar;
+    private LinearLayout bottomPanel;
+    private TextView traceHint;
 
     private final ActivityResultLauncher<String> permissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -82,10 +87,16 @@ public class CameraTraceActivity extends AppCompatActivity {
 
         previewView = findViewById(R.id.cameraPreview);
         ghostImage = findViewById(R.id.ghostImage);
+        topBar = findViewById(R.id.topBar);
+        bottomPanel = findViewById(R.id.bottomPanel);
+        traceHint = findViewById(R.id.traceHint);
 
         applyInsets();
         setupGhostTouch();
         setupControls();
+
+        traceHint.animate().alpha(0f).setStartDelay(3500).setDuration(600)
+                .withEndAction(() -> traceHint.setVisibility(View.GONE)).start();
 
         Uri imageUri = getIntent().getData();
         int sampleResId = getIntent().getIntExtra("sampleResId", 0);
@@ -126,35 +137,18 @@ public class CameraTraceActivity extends AppCompatActivity {
         float density = getResources().getDisplayMetrics().density;
         int pad12 = (int) (12 * density);
 
-        TextView hint = findViewById(R.id.traceHint);
-        ViewCompat.setOnApplyWindowInsetsListener(hint, (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(traceHint, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
             return insets;
         });
 
-        ImageView btnTorch = findViewById(R.id.btnTorch);
-        ViewCompat.setOnApplyWindowInsetsListener(btnTorch, (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(topBar, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
             return insets;
         });
 
-        ImageView btnLineArt = findViewById(R.id.btnLineArt);
-        ViewCompat.setOnApplyWindowInsetsListener(btnLineArt, (v, insets) -> {
-            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
-            return insets;
-        });
-
-        ImageView btnBack = findViewById(R.id.btnBack);
-        ViewCompat.setOnApplyWindowInsetsListener(btnBack, (v, insets) -> {
-            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(v.getPaddingLeft(), bars.top + pad12, v.getPaddingRight(), v.getPaddingBottom());
-            return insets;
-        });
-
-        android.view.View bottomPanel = findViewById(R.id.bottomPanel);
         ViewCompat.setOnApplyWindowInsetsListener(bottomPanel, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), bars.bottom);
@@ -461,7 +455,22 @@ public class CameraTraceActivity extends AppCompatActivity {
                     }
                 });
 
+        GestureDetector tapDetector = new GestureDetector(this,
+                new GestureDetector.SimpleOnGestureListener() {
+                    @Override
+                    public boolean onDoubleTap(@NonNull MotionEvent e) {
+                        ghostImage.setTranslationX(0f);
+                        ghostImage.setTranslationY(0f);
+                        ghostImage.setScaleX(1f);
+                        ghostImage.setScaleY(1f);
+                        Toast.makeText(CameraTraceActivity.this, "Ghost reset to center",
+                                Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                });
+
         ghostImage.setOnTouchListener((v, event) -> {
+            tapDetector.onTouchEvent(event);
             scaleDetector.onTouchEvent(event);
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:

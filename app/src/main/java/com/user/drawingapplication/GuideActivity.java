@@ -41,19 +41,17 @@ public class GuideActivity extends AppCompatActivity {
                     + "Point your camera at your drawing book — the photo appears as a "
                     + "faint ghost over the live camera view.\n\n"
                     + "Drag with one finger to move the ghost, pinch with two fingers "
-                    + "to resize it.",
+                    + "to resize it, and double-tap it to reset back to the center.",
 
-            "Opacity slider — control how visible the ghost image is. "
-                    + "Slide it down for a subtle guide, up for a strong one.\n\n"
-                    + "Line art button (top-left) — converts the photo into simple "
-                    + "black outlines, much easier to trace.\n\n"
-                    + "Flashlight button (top-right) — brightens your paper in dim light.\n\n"
-                    + "Change image button (bottom-left) — swap the reference without "
-                    + "leaving the camera.",
+            "Back button (top-left) — return to the menu.\n\n"
+                    + "Flashlight (top-right) — brightens your paper in dim light.\n\n"
+                    + "Bottom bar — change image, opacity slider, line art toggle "
+                    + "(turns the photo into simple black outlines), and the purple "
+                    + "save button.",
 
-            "Tap \"Save to Gallery\" — the screen flashes like a camera, the ghost "
-                    + "hides for a clean capture, and your drawing is saved together "
-                    + "with the reference image.\n\n"
+            "Tap the purple save button in the bottom bar — the screen flashes like "
+                    + "a camera, the ghost hides for a clean capture, and your drawing "
+                    + "is saved together with the reference image.\n\n"
                     + "You are taken to the gallery right after saving.",
 
             "Every saved drawing shows the date it was made.\n\n"

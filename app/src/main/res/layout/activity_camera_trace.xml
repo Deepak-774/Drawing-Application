@@ -33,51 +33,50 @@
         android:paddingRight="14dp"
         android:paddingTop="7dp"
         android:paddingBottom="7dp"
-        android:text="Drag to move · Pinch to resize"
+        android:text="Drag · Pinch · Double-tap to reset"
         android:textColor="#FFFFFF"
         android:textSize="12sp" />
 
-    <ImageView
-        android:id="@+id/btnBack"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="top|start"
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
         android:layout_marginStart="16dp"
-        android:alpha="0.7"
-        android:background="@drawable/card_btn_bg"
-        android:clickable="true"
-        android:contentDescription="Go back"
-        android:focusable="true"
-        android:padding="10dp"
-        android:src="@drawable/ic_arrow_back" />
-
-    <ImageView
-        android:id="@+id/btnLineArt"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="top|start"
-        android:layout_marginStart="70dp"
-        android:alpha="0.7"
-        android:background="@drawable/card_btn_bg"
-        android:clickable="true"
-        android:contentDescription="Line art mode"
-        android:focusable="true"
-        android:padding="10dp"
-        android:src="@drawable/ic_auto_fix_high" />
-
-    <ImageView
-        android:id="@+id/btnTorch"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="top|end"
         android:layout_marginEnd="16dp"
-        android:alpha="0.7"
-        android:background="@drawable/card_btn_bg"
-        android:clickable="true"
-        android:contentDescription="Flashlight"
-        android:focusable="true"
-        android:padding="10dp"
-        android:src="@drawable/ic_flashlight_off" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:alpha="0.7"
+            android:background="@drawable/card_btn_bg"
+            android:clickable="true"
+            android:contentDescription="Go back"
+            android:focusable="true"
+            android:padding="10dp"
+            android:src="@drawable/ic_arrow_back" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:id="@+id/btnTorch"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:alpha="0.7"
+            android:background="@drawable/card_btn_bg"
+            android:clickable="true"
+            android:contentDescription="Flashlight"
+            android:focusable="true"
+            android:padding="10dp"
+            android:src="@drawable/ic_flashlight_off" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/bottomPanel"
@@ -89,34 +88,26 @@
         android:layout_marginBottom="16dp"
         android:orientation="vertical">
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnDone"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@drawable/btn_done_bg"
-            android:text="Save to Gallery"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:drawableStartCompat="@drawable/ic_save"
-            app:drawableTint="#FFFFFF" />
-
         <LinearLayout
             android:id="@+id/controlBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:background="@drawable/menu_item_bg"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="14dp">
+            android:padding="10dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Opacity"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp" />
+            <ImageView
+                android:id="@+id/changeImageBtn"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/menu_icon_bg"
+                android:clickable="true"
+                android:contentDescription="Change reference image"
+                android:focusable="true"
+                android:padding="10dp"
+                android:src="@drawable/ic_image"
+                app:tint="#FFFFFF" />
 
             <SeekBar
                 android:id="@+id/opacitySeekBar"
@@ -131,16 +122,28 @@
                 android:thumbTint="#BC6FF1" />
 
             <ImageView
-                android:id="@+id/changeImageBtn"
+                android:id="@+id/btnLineArt"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
-                android:background="@drawable/menu_icon_bg"
+                android:alpha="0.7"
+                android:background="@drawable/card_btn_bg"
                 android:clickable="true"
-                android:contentDescription="Change reference image"
+                android:contentDescription="Line art mode"
                 android:focusable="true"
                 android:padding="10dp"
-                android:src="@drawable/ic_image"
-                android:tint="#FFFFFF" />
+                android:src="@drawable/ic_auto_fix_high" />
+
+            <ImageView
+                android:id="@+id/btnDone"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/btn_done_bg"
+                android:clickable="true"
+                android:contentDescription="Save to gallery"
+                android:focusable="true"
+                android:padding="11dp"
+                android:src="@drawable/ic_save" />
 
         </LinearLayout>
 
